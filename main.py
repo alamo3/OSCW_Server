@@ -4,6 +4,9 @@ import json
 import cgi
 import socket
 
+_SERVER_HTTP_PORT_NUM_ : int = 52345
+_SERVER_TCP_PORT_NUM : int = 52346
+
 class Server(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
@@ -22,9 +25,6 @@ class Server(BaseHTTPRequestHandler):
         self.wfile.write(bytes(json.dumps({'success' : 'true'}), 'utf-8'))
 
 
-    def do_PUT(self):
-        pass
-
     # POST echoes the message adding a JSON field
     def do_POST(self):
         ctype = self.headers.get_content_type()
@@ -35,10 +35,6 @@ class Server(BaseHTTPRequestHandler):
             self.send_response(400)
             self.end_headers()
             return
-
-        print(self.headers)
-
-        # read the message and convert it into a python dictionary
 
         length = int(self.headers['Content-length'])
         message = json.loads(self.rfile.read(length))
@@ -51,7 +47,7 @@ class Server(BaseHTTPRequestHandler):
         self.wfile.write(bytes(json.dumps(message), 'utf-8'))
 
 
-def run(server_class=HTTPServer, handler_class=Server, port=52345):
+def run(server_class=HTTPServer, handler_class=Server, port=_SERVER_HTTP_PORT_NUM_):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
 
@@ -67,9 +63,5 @@ def run(server_class=HTTPServer, handler_class=Server, port=52345):
 
 
 if __name__ == "__main__":
-    from sys import argv
 
-    if len(argv) == 2:
-        run(port=int(argv[1]))
-    else:
-        run()
+    run()
