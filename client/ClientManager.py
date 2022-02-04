@@ -19,6 +19,7 @@ class ClientManager:
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.serverSocket.listen(2)
         self.serverThread = threading.Thread(target=self.server, daemon= True)
+        self.serverThread.start()
 
     def server(self):
         while True:
@@ -29,8 +30,11 @@ class ClientManager:
                 conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
                 self.connectedToCar = True
 
-                data = conn.recv(1024)
+                data = conn.recv(1024)  # first transmission will be for identification
                 dataStr = data.decode()
+
+                carClientInfo = dataStr.split(",")
+
 
             except socket.timeout:
                 traceback.print_exc()

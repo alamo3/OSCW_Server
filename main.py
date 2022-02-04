@@ -1,11 +1,13 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from http import HTTPStatus
 import json
-import cgi
 import socket
+import client
+from client.ClientManager import ClientManager
 
 _SERVER_HTTP_PORT_NUM_ : int = 52345
 _SERVER_TCP_PORT_NUM : int = 52346
+
+clientManager = None
 
 class Server(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -52,6 +54,9 @@ def run(server_class=HTTPServer, handler_class=Server, port=_SERVER_HTTP_PORT_NU
     s.connect(("8.8.8.8", 80))
 
     device_ip = s.getsockname()[0]
+
+    clientManager = ClientManager(_SERVER_TCP_PORT_NUM, device_ip)
+    clientManager.startListening()
 
     print(device_ip)
 
