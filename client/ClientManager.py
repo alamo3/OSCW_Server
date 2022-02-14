@@ -2,6 +2,8 @@ import socket
 import threading
 import traceback
 
+from client import CarClient
+
 
 class ClientManager:
 
@@ -33,14 +35,27 @@ class ClientManager:
                 data = conn.recv(1024)  # first transmission will be for identification
                 dataStr = data.decode()
 
+                # expect to receive clientName, numCams and camData split by commas
+
                 carClientInfo = dataStr.split(",")
 
+                self.clientCar = CarClient.CarClient(carClientInfo[0], addr, int(carClientInfo[1]), carClientInfo[2:])
 
-            except socket.timeout:
-                traceback.print_exc()
-                self.connectedToCar = False
-                print("Connection failure!")
-                continue
+                conn.settimeout(7.0)
+
+                while True:
+                    # expect a ping every few seconds to keep connection alive
+                    try:
+                        data = conn.recv(1024)
+
+                    except socket.timeout:
+                        traceback.print_exc()
+                        self.connectedToCar = False
+                        conn.close()
+                        print("Connection failure!")
+                        break
+
+
             except:
                 traceback.print_exc()
                 print("Error ocurred!")
