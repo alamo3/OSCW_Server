@@ -3,16 +3,23 @@ import json
 import socket
 import client
 from client.ClientManager import ClientManager
+from camera.CameraManager import  CameraManager
 
 _SERVER_HTTP_PORT_NUM_ : int = 52345
 _SERVER_TCP_PORT_NUM : int = 52346
 
 clientManager = None
+cameraManager = None
 
 class Server(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
+        self.end_headers()
+
+    def _set_headers_image(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'image/png')
         self.end_headers()
 
     def do_HEAD(self):
@@ -22,7 +29,13 @@ class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         pathAbs = self.path.removeprefix("/")
         pathDir = pathAbs.split("/")
-        print(pathDir)
+
+        if pathDir[0] == 'imageManager':
+            self._set_headers_image()
+            imageFile = open('Test.png', 'rb').read()
+            self.wfile.write(imageFile)
+            return
+
         self._set_headers()
         self.wfile.write(bytes(json.dumps({'success' : 'true'}), 'utf-8'))
 
@@ -57,6 +70,8 @@ def run(server_class=HTTPServer, handler_class=Server, port=_SERVER_HTTP_PORT_NU
 
     clientManager = ClientManager(_SERVER_TCP_PORT_NUM, device_ip)
     clientManager.startListening()
+
+    cameraManager = CameraManager(clientManager)
 
     print(device_ip)
 
