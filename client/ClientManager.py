@@ -23,6 +23,29 @@ class ClientManager:
         self.serverThread = threading.Thread(target=self.server, daemon= True)
         self.serverThread.start()
 
+    def getString(self, byteMessage):
+        return byteMessage.decode()
+
+    def handleImageTransfer(self, conn):
+
+        conn.send(bytes('CAM_ID', 'utf-8'))
+        cam_id = conn.recv(1024).decode()
+
+        conn.send(bytes('SIZE', 'utf-8'))
+
+        size = conn.recv(1024)
+        size = int(size)
+
+        conn.send(bytes('SEND_IMAGE', 'utf-8'))
+
+        image = conn.recv(size * 2)
+
+        file = open("images/"+"cam_"+cam_id+".png", "wb")
+        file.write(image)
+        file.close()
+
+        conn.send(bytes('TRANSFER_SUCCESS', 'utf-8'))
+
     def server(self):
         while True:
 
@@ -41,12 +64,17 @@ class ClientManager:
 
                 self.clientCar = CarClient.CarClient(carClientInfo[0], addr, int(carClientInfo[1]), carClientInfo[2:])
 
+                conn.send(bytes('CONNECTED','utf-8'))
+
                 conn.settimeout(7.0)
 
                 while True:
                     # expect a ping every few seconds to keep connection alive
                     try:
-                        data = conn.recv(1024)
+                        dataStr = conn.recv(1024).decode()
+
+                        if dataStr == "IMAGE":
+                            self.handleImageTransfer(conn)
 
                     except socket.timeout:
                         traceback.print_exc()
