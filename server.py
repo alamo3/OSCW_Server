@@ -3,13 +3,14 @@ import json
 import socket
 import client
 from client.ClientManager import ClientManager
-from camera.CameraManager import  CameraManager
+from camera.CameraManager import CameraManager
 
-_SERVER_HTTP_PORT_NUM_ : int = 52345
-_SERVER_TCP_PORT_NUM : int = 52346
+_SERVER_HTTP_PORT_NUM_: int = 52345
+_SERVER_TCP_PORT_NUM: int = 52346
 
 clientManager = None
 cameraManager = None
+
 
 class Server(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -37,13 +38,11 @@ class Server(BaseHTTPRequestHandler):
             return
 
         self._set_headers()
-        self.wfile.write(bytes(json.dumps({'success' : 'true'}), 'utf-8'))
-
+        self.wfile.write(bytes(json.dumps({'success': 'true'}), 'utf-8'))
 
     # POST echoes the message adding a JSON field
     def do_POST(self):
         ctype = self.headers.get_content_type()
-
 
         # refuse to receive non-json content
         if ctype != 'application/json':
@@ -83,5 +82,4 @@ def run(server_class=HTTPServer, handler_class=Server, port=_SERVER_HTTP_PORT_NU
 
 
 if __name__ == "__main__":
-
     run()

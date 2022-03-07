@@ -14,13 +14,14 @@ class ClientManager:
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connectedToCar = False
         self.serverThread = None
-
+        self.command = None
+        self.responses = {"images": "NONE"}
 
     def startListening(self):
         self.serverSocket.bind((self.bindIP, self.port))
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.serverSocket.listen(2)
-        self.serverThread = threading.Thread(target=self.server, daemon= True)
+        self.serverThread = threading.Thread(target=self.server, daemon=True)
         self.serverThread.start()
 
     def getString(self, byteMessage):
@@ -40,11 +41,13 @@ class ClientManager:
 
         image = conn.recv(size * 2)
 
-        file = open("images/"+"cam_"+cam_id+".png", "wb")
+        file = open("images/" + "cam_" + cam_id + ".png", "wb")
         file.write(image)
         file.close()
 
         conn.send(bytes('TRANSFER_SUCCESS', 'utf-8'))
+
+        self.responses["image"] = "IMAGE_RECEIVED"
 
     def server(self):
         while True:
@@ -64,7 +67,7 @@ class ClientManager:
 
                 self.clientCar = CarClient.CarClient(carClientInfo[0], addr, int(carClientInfo[1]), carClientInfo[2:])
 
-                conn.send(bytes('CONNECTED','utf-8'))
+                conn.send(bytes('CONNECTED', 'utf-8'))
 
                 conn.settimeout(7.0)
 
@@ -75,6 +78,13 @@ class ClientManager:
 
                         if dataStr == "IMAGE":
                             self.handleImageTransfer(conn)
+
+                        if dataStr == "COMMAND":
+                            if self.command is not None:
+                                conn.send(bytes(self.command, 'utf-8'))
+                            else:
+                                conn.send(bytes('NONE', 'utf-8'))
+
 
                     except socket.timeout:
                         traceback.print_exc()
@@ -88,4 +98,3 @@ class ClientManager:
                 traceback.print_exc()
                 print("Error ocurred!")
                 continue
-
